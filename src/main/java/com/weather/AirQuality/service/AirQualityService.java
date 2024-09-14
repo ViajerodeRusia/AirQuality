@@ -41,10 +41,10 @@ public class AirQualityService {
                 sendMessageToTelegram(chatId, "Город не найден. Пожалуйста, проверьте написание и попробуйте снова.");
             }
         } catch (JSONException e) {
-            log.error("Error parsing JSON response", e);
+            log.error("Ошибка обработки данных: " + e.getMessage());
             sendMessageToTelegram(chatId, "Ошибка при обработке данных. Пожалуйста, проверьте написание города и попробуйте снова.");
         } catch (Exception e) {
-            log.error("Error in API request", e);
+            log.error("Ошибка при запросе к API: " + e.getMessage());
             sendMessageToTelegram(chatId, "Город не найден. Пожалуйста, проверьте написание и попробуйте снова.");
         }
     }
@@ -67,18 +67,19 @@ public class AirQualityService {
                             "PM2.5: *%.1f µg/m³*\n" +
                             "Температура: *%.1f°C*\n" +
                             "Влажность: *%.1f%%*\n" +
-                            "Рекомандации: *%s*\n",
+                            "Рекомендации: *%s*\n",
                     cityName, pm25Value, temperature, humidity, pm25Recommendation
             );
 
             // Логируем сообщение
             log.info("Sending air quality update to Telegram: " + message);
 
-            // Отправляем сообщение в Telegram (здесь необходимо использовать метод отправки сообщения)
+            // Отправляем сообщение в Telegram
             sendMessageToTelegram(chatId, message);
 
         } catch (Exception e) {
-            log.error("Error parsing JSON response", e);
+            log.error("Ошибка при обработке данных: " + e.getMessage());
+            sendMessageToTelegram(chatId, "Ошибка при обработке данных. Пожалуйста, попробуйте снова.");
         }
     }
     private String getPm25Recommendation(double pm25Value) {
@@ -113,16 +114,25 @@ public class AirQualityService {
 
     private double extractPm25Value(JSONObject jsonResponse) throws JSONException {
         JSONObject data = jsonResponse.getJSONObject("data");
-        JSONObject iaqi = data.getJSONObject("iaqi");
-        JSONObject pm25 = iaqi.getJSONObject("pm25");
+        JSONObject iaqi = data.optJSONObject("iaqi");
 
-        Object value = pm25.get("v");
-        if (value instanceof Number) {
-            return ((Number) value).doubleValue();
-        } else if (value instanceof String) {
-            return Double.parseDouble((String) value);
+        if (iaqi != null && iaqi.has("pm25")) {
+            JSONObject pm25 = iaqi.getJSONObject("pm25");
+            Object value = pm25.opt("v");
+
+            if (value instanceof Number) {
+                return ((Number) value).doubleValue();
+            } else if (value instanceof String) {
+                try {
+                    return Double.parseDouble((String) value);
+                } catch (NumberFormatException e) {
+                    throw new JSONException("Неверный формат значения PM2.5: " + value);
+                }
+            } else {
+                throw new JSONException("Неожиданный тип значения для PM2.5: " + value.getClass().getName());
+            }
         } else {
-            throw new JSONException("Unexpected value type for pm25: " + value.getClass().getName());
+            throw new JSONException("Данные о PM2.5 не найдены");
         }
     }
     private String extractCityName(JSONObject jsonResponse) throws JSONException {

@@ -12,10 +12,6 @@ import java.io.IOException;
 @Component
 @Slf4j
 public class TextMessageHandler {
-
-    @Autowired
-    private UserRegistrationService userRegistrationService;
-
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -33,9 +29,7 @@ public class TextMessageHandler {
                     break;
                 case "/help":
                     bot.sendMessage(chatId, "List of commands:" +
-                            "\n/start - Menu" +
-                            "\n/register_user - User registration" +
-                            "\n/help - List of commands");
+                            "\n/start - Start the app");
                     break;
                 default:
                     // Логирование состояния

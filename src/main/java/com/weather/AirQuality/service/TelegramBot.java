@@ -36,8 +36,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         // Init of bot commands
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "Start"));
-        listOfCommands.add(new BotCommand("/register_user",
-                "User subscription for daily air quality updates"));
         listOfCommands.add(new BotCommand("/help", "Help"));
 
         try {

@@ -9,9 +9,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @Slf4j
 public class CallBackQueryHandler {
-
-    @Autowired
-    private UserRegistrationService userRegistrationService;
     @Autowired
     private TextMessageHandler textMessageHandler;
     @Autowired
@@ -24,9 +21,6 @@ public class CallBackQueryHandler {
 
         try {
             switch (callbackData) {
-                case "Air quality check daily":
-                    bot.sendMessage(chatId, "Please enter the city for daily air quality check:");
-                    break;
                 case "Air quality check":
                     bot.sendMessage(chatId, "Please enter the city to check the air quality:");
                     break;
