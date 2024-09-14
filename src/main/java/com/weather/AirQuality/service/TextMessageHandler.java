@@ -20,16 +20,16 @@ public class TextMessageHandler {
     private ApplicationContext applicationContext;
 
     public void handleTextMessage(Update update) throws TelegramApiException, IOException {
-        // Check if it's a text message
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
+
             TelegramBot bot = applicationContext.getBean(TelegramBot.class);
+            AirQualityService airQualityService = applicationContext.getBean(AirQualityService.class);
 
             switch (messageText) {
                 case "/start":
                     bot.startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-
                     break;
                 case "/help":
                     bot.sendMessage(chatId, "List of commands:" +
@@ -37,12 +37,14 @@ public class TextMessageHandler {
                             "\n/register_user - User registration" +
                             "\n/help - List of commands");
                     break;
-                case "/register_user":
-                    userRegistrationService.registerUser(update);
-                    break;
                 default:
-                    bot.sendMessage(chatId, "Please choose one of the listed commands");
-                    break;
+                    // Логирование состояния
+                    log.info("Received message: " + messageText + " from chatId: " + chatId);
+                    log.info("Current waitingForCity state: " + messageText + " for chatId: " + chatId);
+
+                    bot.sendMessage(chatId, "Checking air quality for " + messageText + "...");
+                    airQualityService.sendAirQualityNow(chatId, messageText);
+                break;
             }
         }
     }

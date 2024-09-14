@@ -9,25 +9,26 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @Slf4j
 public class CallBackQueryHandler {
+
     @Autowired
     private UserRegistrationService userRegistrationService;
     @Autowired
     private TextMessageHandler textMessageHandler;
     @Autowired
     private ApplicationContext applicationContext;
+
     public void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
         TelegramBot bot = applicationContext.getBean(TelegramBot.class);
-        AirQualityService airQualityService = applicationContext.getBean(AirQualityService.class);
 
         try {
             switch (callbackData) {
                 case "Air quality check daily":
-                    airQualityService.sendAirQualityNow(chatId);
+                    bot.sendMessage(chatId, "Please enter the city for daily air quality check:");
                     break;
                 case "Air quality check":
-                    airQualityService.sendAirQualityNow(chatId);
+                    bot.sendMessage(chatId, "Please enter the city to check the air quality:");
                     break;
                 default:
                     log.warn("Unknown callback data received: " + callbackData);

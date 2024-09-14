@@ -20,18 +20,32 @@ public class AirQualityService {
     @Autowired
     private ApplicationContext applicationContext;
 
-    public void sendAirQualityNow(long chatId) {
+    public void sendAirQualityNow(long chatId, String city) {
         try {
-            ResponseEntity<String> response = airQualityInterface.getAirQualityData();
+            city = city.toLowerCase(); // Приводим название города к нижнему регистру
+            ResponseEntity<String> response = airQualityInterface.getAirQualityData(city);
             String responseBody = response.getBody();
 
             if (responseBody != null) {
+                log.info("API Response for city " + city + ": " + responseBody);
                 JSONObject jsonResponse = new JSONObject(responseBody);
-                log.info("Received air quality data: " + jsonResponse.toString());
-                sendAirQualityUpdate(jsonResponse, chatId);
+                // Проверка на статус ответа
+                String status = jsonResponse.optString("status", "error");
+                if ("ok".equals(status)) {
+                    sendAirQualityUpdate(jsonResponse, chatId);
+                } else {
+                    String errorMessage = jsonResponse.optString("data", "Unknown error");
+                    sendMessageToTelegram(chatId, "Ошибка при получении данных: " + errorMessage);
+                }
+            } else {
+                sendMessageToTelegram(chatId, "Город не найден. Пожалуйста, проверьте написание и попробуйте снова.");
             }
         } catch (JSONException e) {
             log.error("Error parsing JSON response", e);
+            sendMessageToTelegram(chatId, "Ошибка при обработке данных. Пожалуйста, проверьте написание города и попробуйте снова.");
+        } catch (Exception e) {
+            log.error("Error in API request", e);
+            sendMessageToTelegram(chatId, "Город не найден. Пожалуйста, проверьте написание и попробуйте снова.");
         }
     }
 
@@ -113,10 +127,6 @@ public class AirQualityService {
     }
     private String extractCityName(JSONObject jsonResponse) throws JSONException {
         return jsonResponse.getJSONObject("data").getJSONObject("city").getString("name");
-    }
-
-    private int extractAqiValue(JSONObject jsonResponse) throws JSONException {
-        return jsonResponse.getJSONObject("data").getInt("aqi");
     }
 
     private double extractTemperature(JSONObject jsonResponse) throws JSONException {
