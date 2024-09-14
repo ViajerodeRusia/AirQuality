@@ -7,7 +7,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.weather.AirQuality.entity.User;
-import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +36,7 @@ public class UserRegistrationService {
     public void registerUser(long chatId) {
         TelegramBot bot = applicationContext.getBean(TelegramBot.class);
         if (userRepository.findByChatId(chatId).isPresent()) {
-            bot.sendMessage(chatId, "Вы уже зарегистрированы как волонтер.");
+            bot.sendMessage(chatId, "Вы уже зарегистрированы");
         } else {
             askForName(chatId);
         }
@@ -75,7 +74,7 @@ public class UserRegistrationService {
 
     private void finishRegistration(long chatId) {
         TelegramBot bot = applicationContext.getBean(TelegramBot.class);
-        bot.sendMessage(chatId, "Регистрация завершена! Спасибо, что стали волонтером.");
+        bot.sendMessage(chatId, "Регистрация завершена");
         awaitingName.remove(chatId);
     }
 }
